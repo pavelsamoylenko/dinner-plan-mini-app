@@ -127,6 +127,27 @@ button,
   animation: spin 1s linear infinite;
 }
 
+/* Slide animations */
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-duration: 200ms;
+  animation-fill-mode: both;
+}
+
+.slide-in-from-bottom-2 {
+  animation-name: slide-in-from-bottom;
+}
+
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   :root {
