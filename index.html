@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Family Dinner Menu</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Default theme colors (will be overridden by Telegram) */
+        
+         :root {
+            --tg-bg-color: #ffffff;
+            --tg-text-color: #000000;
+            --tg-hint-color: #999999;
+            --tg-link-color: #168dcd;
+            --tg-button-color: #40a7e3;
+            --tg-button-text-color: #ffffff;
+            --tg-secondary-bg-color: #f1f1f1;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--tg-bg-color);
+            color: var(--tg-text-color);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
