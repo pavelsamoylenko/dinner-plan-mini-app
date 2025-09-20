@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { useTelegram } from '@/hooks/useTelegram';
 import { useAppStore } from '@/store/appStore';
 import WeekHeader from './WeekHeader';
@@ -6,81 +6,77 @@ import MenuView from './MenuView';
 import ShoppingView from './ShoppingView';
 
 const AppShell: React.FC = () => {
-  const { isReady, isTelegram, showMainButton, hideMainButton, hapticFeedback } = useTelegram();
+  const { isReady, isTelegram, hapticFeedback } = useTelegram();
+  const mainContentRef = useRef<HTMLElement>(null);
+  const scrollPositions = useRef<Record<string, number>>({ menu: 0, shopping: 0 });
+  const hasInitiallyLoaded = useRef<boolean>(false);
+  const isFirstMenuLoad = useRef<boolean>(true);
   
   // Split store selectors to avoid unnecessary re-renders
   const currentTab = useAppStore(state => state.currentTab);
-  const weekStateChecklist = useAppStore(state => state.weekState.checklist);
   const setCurrentTab = useAppStore(state => state.setCurrentTab);
   const initializeApp = useAppStore(state => state.initializeApp);
-  const markAllShoppingItems = useAppStore(state => state.markAllShoppingItems);
-  const resetShoppingList = useAppStore(state => state.resetShoppingList);
-  const getCurrentShoppingItems = useAppStore(state => state.getCurrentShoppingItems);
 
-  // Memoize shopping items to prevent recalculation on every render
-  const shoppingItems = useMemo(() => {
-    return getCurrentShoppingItems();
-  }, [getCurrentShoppingItems]);
 
-  // Memoize shopping progress calculation
-  const shoppingProgress = useMemo(() => {
-    const totalItems = shoppingItems.length;
-    const checkedItems = shoppingItems.filter(item => weekStateChecklist[item.id]).length;
-    const isAllChecked = totalItems > 0 && checkedItems === totalItems;
+
+  // Save scroll position when tab changes
+  const saveScrollPosition = useCallback((tab: 'menu' | 'shopping') => {
+    if (mainContentRef.current) {
+      scrollPositions.current[tab] = mainContentRef.current.scrollTop;
+    }
+  }, []);
+
+  // Handle auto-scroll callback from MenuView
+  const handleMenuAutoScroll = useCallback((scrollTop: number) => {
+    // Update the saved scroll position for menu tab after auto-scroll
+    scrollPositions.current.menu = scrollTop;
+  }, []);
+
+  // Restore scroll position for current tab
+  const restoreScrollPosition = useCallback((tab: 'menu' | 'shopping') => {
+    if (mainContentRef.current) {
+      const savedPosition = scrollPositions.current[tab];
+      // Always restore saved position, except for first menu load which will auto-scroll
+      const shouldRestore = tab === 'shopping' || (tab === 'menu' && !isFirstMenuLoad.current);
+      
+      if (shouldRestore) {
+        requestAnimationFrame(() => {
+          if (mainContentRef.current) {
+            mainContentRef.current.scrollTop = savedPosition;
+          }
+        });
+      }
+    }
+  }, []);
+
+  // Handle tab switching with scroll position management
+  const handleTabSwitch = useCallback((newTab: 'menu' | 'shopping') => {
+    // Save current tab's scroll position
+    saveScrollPosition(currentTab);
     
-    return { totalItems, checkedItems, isAllChecked };
-  }, [shoppingItems, weekStateChecklist]);
+    // Mark that we're no longer on first menu load
+    if (currentTab === 'menu') {
+      isFirstMenuLoad.current = false;
+    }
+    
+    // Switch tab
+    hapticFeedback('selection');
+    setCurrentTab(newTab);
+  }, [currentTab, saveScrollPosition, hapticFeedback, setCurrentTab]);
 
-  // Stable callbacks to prevent useEffect re-runs
-  const handleOpenShopping = useCallback(() => {
-    hapticFeedback('light');
-    setCurrentTab('shopping');
-  }, [hapticFeedback, setCurrentTab]);
-
-  const handleMarkAll = useCallback(() => {
-    hapticFeedback('success');
-    markAllShoppingItems();
-  }, [hapticFeedback, markAllShoppingItems]);
-
-  const handleResetList = useCallback(() => {
-    hapticFeedback('medium');
-    resetShoppingList();
-  }, [hapticFeedback, resetShoppingList]);
+  // Restore scroll position when tab changes
+  useEffect(() => {
+    restoreScrollPosition(currentTab);
+  }, [currentTab, restoreScrollPosition]);
 
   // Initialize app on mount
   useEffect(() => {
-    if (isReady) {
+    if (isReady && !hasInitiallyLoaded.current) {
       initializeApp();
+      hasInitiallyLoaded.current = true;
     }
   }, [isReady, initializeApp]);
 
-  // Update MainButton based on current tab - with minimal dependencies
-  useEffect(() => {
-    if (!isReady) return;
-
-    if (currentTab === 'menu') {
-      showMainButton('Открыть список покупок', handleOpenShopping);
-    } else if (currentTab === 'shopping') {
-      if (shoppingProgress.isAllChecked) {
-        showMainButton('Сбросить отметки', handleResetList);
-      } else {
-        showMainButton('Отметить всё купленным', handleMarkAll);
-      }
-    }
-
-    return () => {
-      hideMainButton();
-    };
-  }, [
-    isReady, 
-    currentTab, 
-    shoppingProgress.isAllChecked,
-    showMainButton, 
-    hideMainButton,
-    handleOpenShopping,
-    handleMarkAll,
-    handleResetList
-  ]);
 
   if (!isReady) {
     return (
@@ -103,10 +99,7 @@ const AppShell: React.FC = () => {
         <div className="sticky top-0 z-10 bg-tg-bg border-b border-tg-hint/20">
           <div className="flex">
             <button
-              onClick={() => {
-                hapticFeedback('selection');
-                setCurrentTab('menu');
-              }}
+              onClick={() => handleTabSwitch('menu')}
               className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                 currentTab === 'menu'
                   ? 'text-tg-button border-b-2 border-tg-button'
@@ -116,10 +109,7 @@ const AppShell: React.FC = () => {
               Меню
             </button>
             <button
-              onClick={() => {
-                hapticFeedback('selection');
-                setCurrentTab('shopping');
-              }}
+              onClick={() => handleTabSwitch('shopping')}
               className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
                 currentTab === 'shopping'
                   ? 'text-tg-button border-b-2 border-tg-button'
@@ -132,8 +122,19 @@ const AppShell: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-6 pb-safe-bottom max-w-2xl">
-          {currentTab === 'menu' ? <MenuView /> : <ShoppingView />}
+        <main 
+          ref={mainContentRef}
+          data-scroll-container
+          className="container mx-auto px-4 py-6 pb-safe-bottom max-w-2xl overflow-y-auto"
+        >
+          {currentTab === 'menu' ? (
+            <MenuView 
+              onAutoScroll={handleMenuAutoScroll}
+              shouldAutoScroll={isFirstMenuLoad.current}
+            />
+          ) : (
+            <ShoppingView />
+          )}
         </main>
       </div>
 

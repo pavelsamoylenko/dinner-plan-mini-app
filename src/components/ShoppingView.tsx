@@ -8,7 +8,9 @@ const ShoppingView: React.FC = () => {
   const { 
     getCurrentShoppingItems, 
     weekState, 
-    toggleShoppingItem 
+    toggleShoppingItem,
+    markAllShoppingItems,
+    resetShoppingList
   } = useAppStore();
   
   const { hapticFeedback } = useTelegram();
@@ -193,12 +195,37 @@ const ShoppingView: React.FC = () => {
       {/* Progress summary */}
       {progress.total > 0 && (
         <div className="text-center py-4">
-          <p className="text-sm text-tg-hint">
+          <p className="text-sm text-tg-hint mb-4">
             {progress.percentage === 100 
               ? '🎉 Все покупки сделаны!' 
               : `Осталось купить: ${progress.total - progress.completed} позиций`
             }
           </p>
+          
+          {/* Action buttons */}
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => {
+                hapticFeedback('success');
+                markAllShoppingItems();
+              }}
+              className="px-4 py-2 bg-tg-button text-tg-button-text rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+              disabled={progress.percentage === 100}
+            >
+              {progress.percentage === 100 ? '✅ Все отмечено' : 'Отметить всё'}
+            </button>
+            
+            <button
+              onClick={() => {
+                hapticFeedback('medium');
+                resetShoppingList();
+              }}
+              className="px-4 py-2 bg-tg-secondary-bg text-tg-text border border-tg-hint/20 rounded-lg text-sm font-medium hover:bg-tg-hint/10 transition-colors"
+              disabled={progress.percentage === 0}
+            >
+              {progress.percentage === 0 ? '🔄 Уже сброшено' : 'Сбросить всё'}
+            </button>
+          </div>
         </div>
       )}
     </div>

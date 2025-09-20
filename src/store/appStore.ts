@@ -4,7 +4,7 @@ import { AppState, AppSettings } from '@/types';
 import { seedMenus } from '@/data/seedMenus';
 import { seedIngredients } from '@/data/seedIngredients';
 import { getCurrentWeekInfo, shouldResetChecklist, getCurrentISOString } from '@/utils/dateUtils';
-import { getWeekIngredients, resetChecklist, checkAllItems } from '@/utils/shoppingUtils';
+import { getWeekIngredients } from '@/utils/shoppingUtils';
 
 interface AppStore extends AppState {
   // Actions
@@ -79,23 +79,22 @@ export const useAppStore = create<AppStore>()(
       },
 
       resetShoppingList: () => {
-        const currentWeekMenu = get().getCurrentWeekMenu();
-        const currentItems = getWeekIngredients(currentWeekMenu);
-        const resetedChecklist = resetChecklist(currentItems);
-        
         set((state) => ({
           weekState: {
             ...state.weekState,
-            checklist: resetedChecklist,
+            checklist: {},
             lastResetAt: getCurrentISOString()
           }
         }));
       },
 
       markAllShoppingItems: () => {
-        const currentWeekMenu = get().getCurrentWeekMenu();
-        const currentItems = getWeekIngredients(currentWeekMenu);
-        const allCheckedList = checkAllItems(currentItems);
+        const currentItems = get().getCurrentShoppingItems();
+        
+        const allCheckedList: Record<string, boolean> = {};
+        currentItems.forEach(item => {
+          allCheckedList[item.id] = true;
+        });
         
         set((state) => ({
           weekState: {
@@ -117,14 +116,10 @@ export const useAppStore = create<AppStore>()(
         if (shouldResetChecklist(weekState.lastResetAt, settings.baseWeek) || 
             weekState.weekIndex !== currentWeekInfo.weekIndex) {
           
-          const currentWeekMenu = seedMenus[currentWeekInfo.weekIndex];
-          const currentItems = getWeekIngredients(currentWeekMenu);
-          const resetedChecklist = resetChecklist(currentItems);
-          
           set({
             weekState: {
               weekIndex: currentWeekInfo.weekIndex,
-              checklist: resetedChecklist,
+              checklist: {}, // Пустой checklist для новой недели
               lastResetAt: getCurrentISOString()
             }
           });
