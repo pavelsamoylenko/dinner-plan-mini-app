@@ -136,3 +136,20 @@ export function getCurrentDayOfWeek(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
   const isoWeekday = now.isoWeekday(); // dayjs returns 1-7 where 1=Monday
   return isoWeekday as 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }
+
+/**
+ * Get initial week index based on current day
+ * If it's Sunday (7), return next week for shopping, otherwise current week
+ */
+export function getInitialWeekIndex(baseWeek: number = DEFAULT_BASE_WEEK): 0 | 1 | 2 | 3 {
+  const now = dayjs().tz(TIMEZONE);
+  const currentDayOfWeek = now.isoWeekday();
+  
+  // If it's Sunday, show next week for shopping list
+  const targetDate = currentDayOfWeek === 7 ? now.add(1, 'week') : now;
+  
+  const targetIsoWeek = targetDate.isoWeek();
+  const weekIndex = ((targetIsoWeek - baseWeek) % 4 + 4) % 4 as 0 | 1 | 2 | 3;
+  
+  return weekIndex;
+}

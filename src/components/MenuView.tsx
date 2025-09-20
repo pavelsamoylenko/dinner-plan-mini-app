@@ -17,17 +17,20 @@ const MenuView: React.FC<MenuViewProps> = ({
   shouldAutoScroll = true,
   resetAutoScroll = false
 }) => {
-  const { getCurrentWeekMenu } = useAppStore();
-  const weekMenu = getCurrentWeekMenu();
+  const { getSelectedWeekMenu, getCurrentWeek, getSelectedWeek } = useAppStore();
+  const weekMenu = getSelectedWeekMenu();
+  const currentWeekInfo = getCurrentWeek();
+  const selectedWeekInfo = getSelectedWeek();
+  const isCurrentWeek = selectedWeekInfo.weekIndex === currentWeekInfo.weekIndex;
   const todayRef = useRef<HTMLDivElement>(null);
   const [hasAutoScrolled, setHasAutoScrolled] = useState(false);
   
   const dayIds: DayId[] = [1, 2, 3, 4, 5, 6, 7];
   const currentDayOfWeek = getCurrentDayOfWeek();
 
-  // Auto-scroll to today's card with scroll position callback
+  // Auto-scroll to today's card with scroll position callback - only for current week
   const performAutoScroll = useCallback(() => {
-    if (todayRef.current && !hasAutoScrolled && shouldAutoScroll && scrollContainerRef?.current) {
+    if (todayRef.current && !hasAutoScrolled && shouldAutoScroll && isCurrentWeek && scrollContainerRef?.current) {
       const timeout = setTimeout(() => {
         if (todayRef.current && scrollContainerRef?.current) {
           const scrollableParent = scrollContainerRef.current;
@@ -57,7 +60,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
       return () => clearTimeout(timeout);
     }
-  }, [hasAutoScrolled, shouldAutoScroll, onAutoScroll, scrollContainerRef]);
+  }, [hasAutoScrolled, shouldAutoScroll, onAutoScroll, scrollContainerRef, isCurrentWeek]);
 
   // Reset auto-scroll state when needed
   useEffect(() => {
@@ -86,7 +89,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
       <div className="space-y-3">
         {dayIds.map((dayId) => {
-          const isToday = dayId === currentDayOfWeek;
+          const isToday = dayId === currentDayOfWeek && isCurrentWeek;
           
           return (
             <div

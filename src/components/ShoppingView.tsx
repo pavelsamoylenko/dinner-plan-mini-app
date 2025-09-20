@@ -6,7 +6,9 @@ import { ChevronDown, ChevronRight, ShoppingCart, RotateCcw } from 'lucide-react
 
 const ShoppingView: React.FC = () => {
   const { 
-    getCurrentShoppingItems, 
+    getSelectedShoppingItems,
+    getCurrentWeek,
+    getSelectedWeek,
     weekState, 
     toggleShoppingItem,
     markAllShoppingItems,
@@ -25,9 +27,15 @@ const ShoppingView: React.FC = () => {
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   
-  const shoppingItems = getCurrentShoppingItems();
-  const groupedItems = groupShoppingItems(shoppingItems, weekState.checklist);
-  const progress = calculateShoppingProgress(shoppingItems, weekState.checklist);
+  const shoppingItems = getSelectedShoppingItems();
+  const currentWeekInfo = getCurrentWeek();
+  const selectedWeekInfo = getSelectedWeek();
+  const isCurrentWeek = selectedWeekInfo.weekIndex === currentWeekInfo.weekIndex;
+  
+  // Only show checklist for current week, for other weeks show clean list
+  const checklist = isCurrentWeek ? weekState.checklist : {};
+  const groupedItems = groupShoppingItems(shoppingItems, checklist);
+  const progress = calculateShoppingProgress(shoppingItems, checklist);
 
   const toggleCategory = (category: string) => {
     hapticFeedback('selection');
@@ -63,10 +71,10 @@ const ShoppingView: React.FC = () => {
       hapticFeedback('success');
       
       // Get all current items
-      const currentItems = getCurrentShoppingItems();
+      const currentItems = getSelectedShoppingItems();
       
       // Restore each item to its previous state
-      currentItems.forEach(item => {
+      currentItems.forEach((item: { id: string; name: string; category: string; qty?: string }) => {
         const wasChecked = undoState.previousChecklist![item.id] || false;
         const isChecked = weekState.checklist[item.id] || false;
         
@@ -110,8 +118,10 @@ const ShoppingView: React.FC = () => {
     }, 5000);
   };
 
-  // Handle smart toggle button
+  // Handle smart toggle button - only for current week
   const handleSmartToggle = () => {
+    if (!isCurrentWeek) return;
+    
     // Save current state BEFORE any action
     const previousChecklist = { ...weekState.checklist };
     
@@ -242,17 +252,22 @@ const ShoppingView: React.FC = () => {
               {isExpanded && (
                 <div className="border-t border-tg-hint/10">
                   {data.items.map((item) => {
-                    const isChecked = weekState.checklist[item.id];
+                    const isChecked = checklist[item.id];
                     
                     return (
                       <label
                         key={item.id}
-                        className="flex items-center p-3 hover:bg-tg-bg/30 cursor-pointer transition-colors"
+                        className={`flex items-center p-3 transition-colors ${
+                          isCurrentWeek 
+                            ? 'hover:bg-tg-bg/30 cursor-pointer' 
+                            : 'cursor-default opacity-75'
+                        }`}
                       >
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          onChange={() => handleItemToggle(item.id)}
+                          onChange={() => isCurrentWeek && handleItemToggle(item.id)}
+                          disabled={!isCurrentWeek}
                           className="sr-only"
                         />
                         
@@ -260,7 +275,9 @@ const ShoppingView: React.FC = () => {
                         <div className={`flex-shrink-0 w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-colors ${
                           isChecked 
                             ? 'bg-tg-button border-tg-button' 
-                            : 'border-tg-hint hover:border-tg-button'
+                            : isCurrentWeek
+                              ? 'border-tg-hint hover:border-tg-button'
+                              : 'border-tg-hint/50'
                         }`}>
                           {isChecked && (
                             <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -305,8 +322,8 @@ const ShoppingView: React.FC = () => {
         )}
       </div>
 
-      {/* Fixed bottom button */}
-      {progress.total > 0 && (
+      {/* Fixed bottom button - only for current week */}
+      {progress.total > 0 && isCurrentWeek && (
         <div className="fixed bottom-4 left-4 right-4 z-30">
           <div className="container mx-auto max-w-2xl px-4">
             <button
@@ -319,6 +336,17 @@ const ShoppingView: React.FC = () => {
             >
               {progress.percentage === 100 ? '🔄 Сбросить всё' : '✅ Отметить всё'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Info message for non-current weeks */}
+      {!isCurrentWeek && progress.total > 0 && (
+        <div className="fixed bottom-4 left-4 right-4 z-30">
+          <div className="container mx-auto max-w-2xl px-4">
+            <div className="bg-tg-secondary-bg text-tg-hint py-3 px-4 rounded-lg text-center text-sm border border-tg-hint/20">
+              📋 Список покупок для недели {selectedWeekInfo.weekIndex + 1}
+            </div>
           </div>
         </div>
       )}

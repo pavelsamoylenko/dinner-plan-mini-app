@@ -3,10 +3,13 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { AppState, AppSettings } from '@/types';
 import { seedMenus } from '@/data/seedMenus';
 import { seedIngredients } from '@/data/seedIngredients';
-import { getCurrentWeekInfo, shouldResetChecklist, getCurrentISOString } from '@/utils/dateUtils';
+import { getCurrentWeekInfo, shouldResetChecklist, getCurrentISOString, getInitialWeekIndex, getWeekInfoByIndex } from '@/utils/dateUtils';
 import { getWeekIngredients } from '@/utils/shoppingUtils';
 
 interface AppStore extends AppState {
+  // State for selected week navigation
+  selectedWeekIndex: 0 | 1 | 2 | 3;
+  
   // Actions
   setCurrentTab: (tab: 'menu' | 'shopping') => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
@@ -16,10 +19,19 @@ interface AppStore extends AppState {
   initializeApp: () => void;
   checkAndResetWeek: () => void;
   
+  // Week navigation actions
+  setSelectedWeek: (weekIndex: 0 | 1 | 2 | 3) => void;
+  navigateToNextWeek: () => void;
+  navigateToPreviousWeek: () => void;
+  resetToCurrentWeek: () => void;
+  
   // Computed values
   getCurrentWeek: () => ReturnType<typeof getCurrentWeekInfo>;
+  getSelectedWeek: () => ReturnType<typeof getWeekInfoByIndex>;
   getCurrentWeekMenu: () => typeof seedMenus[0];
+  getSelectedWeekMenu: () => typeof seedMenus[0];
   getCurrentShoppingItems: () => ReturnType<typeof getWeekIngredients>;
+  getSelectedShoppingItems: () => ReturnType<typeof getWeekIngredients>;
 }
 
 const getHouseholdId = (): string => {
@@ -37,9 +49,10 @@ export const useAppStore = create<AppStore>()(
     (set, get) => ({
       // Initial state
       currentTab: 'menu',
+      selectedWeekIndex: getInitialWeekIndex(38), // Initialize with initial week logic
       settings: {
         baseWeek: 38, // Week 38 of 2024 as default starting point
-        showNavigation: false,
+        showNavigation: true, // Enable navigation for week switching
         enableSync: false,
         language: 'ru',
         householdId: getHouseholdId()
@@ -126,10 +139,38 @@ export const useAppStore = create<AppStore>()(
         }
       },
 
+      // Week navigation actions
+      setSelectedWeek: (weekIndex) => {
+        set({ selectedWeekIndex: weekIndex });
+      },
+
+      navigateToNextWeek: () => {
+        set((state) => ({
+          selectedWeekIndex: ((state.selectedWeekIndex + 1) % 4) as 0 | 1 | 2 | 3
+        }));
+      },
+
+      navigateToPreviousWeek: () => {
+        set((state) => ({
+          selectedWeekIndex: ((state.selectedWeekIndex - 1 + 4) % 4) as 0 | 1 | 2 | 3
+        }));
+      },
+
+      resetToCurrentWeek: () => {
+        const { settings } = get();
+        const initialWeekIndex = getInitialWeekIndex(settings.baseWeek);
+        set({ selectedWeekIndex: initialWeekIndex });
+      },
+
       // Computed values
       getCurrentWeek: () => {
         const { settings } = get();
         return getCurrentWeekInfo(settings.baseWeek);
+      },
+
+      getSelectedWeek: () => {
+        const { selectedWeekIndex, settings } = get();
+        return getWeekInfoByIndex(selectedWeekIndex, settings.baseWeek);
       },
 
       getCurrentWeekMenu: () => {
@@ -137,9 +178,19 @@ export const useAppStore = create<AppStore>()(
         return seedMenus[weekState.weekIndex];
       },
 
+      getSelectedWeekMenu: () => {
+        const { selectedWeekIndex } = get();
+        return seedMenus[selectedWeekIndex];
+      },
+
       getCurrentShoppingItems: () => {
         const currentWeekMenu = get().getCurrentWeekMenu();
         return getWeekIngredients(currentWeekMenu);
+      },
+
+      getSelectedShoppingItems: () => {
+        const selectedWeekMenu = get().getSelectedWeekMenu();
+        return getWeekIngredients(selectedWeekMenu);
       }
     }),
     {
@@ -149,7 +200,8 @@ export const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         settings: state.settings,
         weekState: state.weekState,
-        currentTab: state.currentTab
+        currentTab: state.currentTab,
+        selectedWeekIndex: state.selectedWeekIndex
       }),
       // Handle version migration if needed
       version: 1,
