@@ -140,3 +140,4 @@ Thumbs.db
 # PWA files
 sw.js.map
 workbox-*.js.map
+.vercel
