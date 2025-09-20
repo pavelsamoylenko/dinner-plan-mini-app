@@ -48,6 +48,22 @@
 
 **Адаптивность**: Поддержка темной и светлой темы через Telegram themeParams
 
+### 4. ✅ Кнопка "Сегодня" для быстрого доступа
+
+**Добавлено**: Кнопка "Сегодня" в навигационной панели для мгновенного перехода к текущему дню
+
+**Расположение**: Под вкладками меню, отображается только на вкладке "Меню"
+
+**Дизайн**:
+- **Иконка**: Calendar из lucide-react
+- **Стиль**: Accent цвет Telegram с прозрачным фоном
+- **Интерактивность**: Hover эффекты + haptic feedback
+- **Адаптивность**: Исчезает при переходе на вкладку "Покупки"
+
+**Функциональность**: 
+- Плавный скролл к текущему дню (`scrollIntoView` с `behavior: 'smooth'`)
+- Haptic feedback при нажатии
+
 ## Технические детали
 
 ### Новые пропсы DayCard
@@ -68,20 +84,51 @@ export function getCurrentDayOfWeek(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
 }
 ```
 
-### Автоскролл в MenuView
+### forwardRef для MenuView
 ```typescript
-useEffect(() => {
-  if (todayRef.current) {
-    const timeout = setTimeout(() => {
-      todayRef.current?.scrollIntoView({
+export interface MenuViewRef {
+  scrollToToday: () => void;
+}
+
+const MenuView = forwardRef<MenuViewRef>((_props, ref) => {
+  // Expose scrollToToday function to parent component
+  useImperativeHandle(ref, () => ({
+    scrollToToday
+  }));
+  
+  // Function to scroll to today's card
+  const scrollToToday = () => {
+    if (todayRef.current) {
+      todayRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'center'
       });
-    }, 100);
+    }
+  };
+});
+```
 
-    return () => clearTimeout(timeout);
-  }
-}, []);
+### Кнопка "Сегодня" в AppShell
+```typescript
+const menuViewRef = useRef<MenuViewRef>(null);
+
+const handleScrollToToday = useCallback(() => {
+  hapticFeedback('light');
+  menuViewRef.current?.scrollToToday();
+}, [hapticFeedback]);
+
+// В JSX:
+{currentTab === 'menu' && (
+  <div className="px-4 pb-3">
+    <button
+      onClick={handleScrollToToday}
+      className="flex items-center space-x-2 px-3 py-2 bg-tg-button/10 hover:bg-tg-button/20 border border-tg-button/30 rounded-lg transition-colors text-tg-button text-sm font-medium"
+    >
+      <Calendar size={16} />
+      <span>Сегодня</span>
+    </button>
+  </div>
+)}
 ```
 
 ## Результаты
@@ -90,6 +137,7 @@ useEffect(() => {
 - **Логичный порядок блюд**: Белок → Гарнир → Овощи
 - **Быстрый доступ**: Автоматический переход к актуальному дню
 - **Визуальная ориентация**: Сразу понятно, какой сегодня день
+- **Мгновенная навигация**: Кнопка "Сегодня" для быстрого возврата
 - **Плавные анимации**: `transition-all duration-200` для смены состояний
 
 ### ✅ Техническая стабильность:

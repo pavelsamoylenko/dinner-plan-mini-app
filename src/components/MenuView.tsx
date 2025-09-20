@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/store/appStore';
 import DayCard from './DayCard';
 import { DayId } from '@/types';
@@ -8,23 +8,25 @@ const MenuView: React.FC = () => {
   const { getCurrentWeekMenu } = useAppStore();
   const weekMenu = getCurrentWeekMenu();
   const todayRef = useRef<HTMLDivElement>(null);
+  const [hasAutoScrolled, setHasAutoScrolled] = useState(false);
   
   const dayIds: DayId[] = [1, 2, 3, 4, 5, 6, 7];
   const currentDayOfWeek = getCurrentDayOfWeek();
 
-  // Auto-scroll to today's card when component mounts
+  // Auto-scroll to today's card only on first mount, not on every tab switch
   useEffect(() => {
-    if (todayRef.current) {
+    if (todayRef.current && !hasAutoScrolled) {
       const timeout = setTimeout(() => {
         todayRef.current?.scrollIntoView({
           behavior: 'smooth',
           block: 'center'
         });
+        setHasAutoScrolled(true);
       }, 100); // Small delay to ensure component is fully rendered
 
       return () => clearTimeout(timeout);
     }
-  }, []);
+  }, [hasAutoScrolled]);
 
   return (
     <div className="space-y-4">
