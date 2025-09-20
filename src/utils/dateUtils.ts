@@ -11,7 +11,7 @@ dayjs.extend(timezone);
 dayjs.extend(isoWeek);
 dayjs.extend(weekOfYear);
 
-const TIMEZONE = 'Europe/Budapest';
+const TIMEZONE = 'Europe/Moscow';
 const DEFAULT_BASE_WEEK = 38; // Week when the cycle starts (can be configured)
 
 /**
