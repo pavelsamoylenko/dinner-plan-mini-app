@@ -125,7 +125,7 @@ export function useTelegram(): TelegramHook {
     webApp.MainButton.onClick(onClick);
     
     setMainButtonCallback(() => onClick);
-  }, [isTelegram, webApp, mainButtonCallback]);
+  }, [isTelegram, webApp]);
 
   const hideMainButton = useCallback(() => {
     if (!isTelegram || !webApp?.MainButton) return;
@@ -136,7 +136,7 @@ export function useTelegram(): TelegramHook {
       webApp.MainButton.offClick(mainButtonCallback);
       setMainButtonCallback(null);
     }
-  }, [isTelegram, webApp, mainButtonCallback]);
+  }, [isTelegram, webApp]);
 
   const updateMainButton = useCallback((text: string, isActive: boolean = true) => {
     if (!isTelegram || !webApp?.MainButton) return;

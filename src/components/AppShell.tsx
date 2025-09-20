@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useTelegram } from '@/hooks/useTelegram';
 import { useAppStore } from '@/store/appStore';
 import WeekHeader from './WeekHeader';
@@ -7,15 +7,45 @@ import ShoppingView from './ShoppingView';
 
 const AppShell: React.FC = () => {
   const { isReady, isTelegram, showMainButton, hideMainButton, hapticFeedback } = useTelegram();
-  const { 
-    currentTab, 
-    setCurrentTab, 
-    initializeApp,
-    markAllShoppingItems,
-    resetShoppingList,
-    getCurrentShoppingItems,
-    weekState
-  } = useAppStore();
+  
+  // Split store selectors to avoid unnecessary re-renders
+  const currentTab = useAppStore(state => state.currentTab);
+  const weekStateChecklist = useAppStore(state => state.weekState.checklist);
+  const setCurrentTab = useAppStore(state => state.setCurrentTab);
+  const initializeApp = useAppStore(state => state.initializeApp);
+  const markAllShoppingItems = useAppStore(state => state.markAllShoppingItems);
+  const resetShoppingList = useAppStore(state => state.resetShoppingList);
+  const getCurrentShoppingItems = useAppStore(state => state.getCurrentShoppingItems);
+
+  // Memoize shopping items to prevent recalculation on every render
+  const shoppingItems = useMemo(() => {
+    return getCurrentShoppingItems();
+  }, [getCurrentShoppingItems]);
+
+  // Memoize shopping progress calculation
+  const shoppingProgress = useMemo(() => {
+    const totalItems = shoppingItems.length;
+    const checkedItems = shoppingItems.filter(item => weekStateChecklist[item.id]).length;
+    const isAllChecked = totalItems > 0 && checkedItems === totalItems;
+    
+    return { totalItems, checkedItems, isAllChecked };
+  }, [shoppingItems, weekStateChecklist]);
+
+  // Stable callbacks to prevent useEffect re-runs
+  const handleOpenShopping = useCallback(() => {
+    hapticFeedback('light');
+    setCurrentTab('shopping');
+  }, [hapticFeedback, setCurrentTab]);
+
+  const handleMarkAll = useCallback(() => {
+    hapticFeedback('success');
+    markAllShoppingItems();
+  }, [hapticFeedback, markAllShoppingItems]);
+
+  const handleResetList = useCallback(() => {
+    hapticFeedback('medium');
+    resetShoppingList();
+  }, [hapticFeedback, resetShoppingList]);
 
   // Initialize app on mount
   useEffect(() => {
@@ -24,31 +54,17 @@ const AppShell: React.FC = () => {
     }
   }, [isReady, initializeApp]);
 
-  // Update MainButton based on current tab
+  // Update MainButton based on current tab - with minimal dependencies
   useEffect(() => {
     if (!isReady) return;
 
     if (currentTab === 'menu') {
-      showMainButton('Открыть список покупок', () => {
-        hapticFeedback('light');
-        setCurrentTab('shopping');
-      });
+      showMainButton('Открыть список покупок', handleOpenShopping);
     } else if (currentTab === 'shopping') {
-      const shoppingItems = getCurrentShoppingItems();
-      const totalItems = shoppingItems.length;
-      const checkedItems = shoppingItems.filter(item => weekState.checklist[item.id]).length;
-      const isAllChecked = totalItems > 0 && checkedItems === totalItems;
-
-      if (isAllChecked) {
-        showMainButton('Сбросить отметки', () => {
-          hapticFeedback('medium');
-          resetShoppingList();
-        });
+      if (shoppingProgress.isAllChecked) {
+        showMainButton('Сбросить отметки', handleResetList);
       } else {
-        showMainButton('Отметить всё купленным', () => {
-          hapticFeedback('success');
-          markAllShoppingItems();
-        });
+        showMainButton('Отметить всё купленным', handleMarkAll);
       }
     }
 
@@ -58,14 +74,12 @@ const AppShell: React.FC = () => {
   }, [
     isReady, 
     currentTab, 
-    weekState.checklist, 
+    shoppingProgress.isAllChecked,
     showMainButton, 
-    hideMainButton, 
-    hapticFeedback,
-    setCurrentTab,
-    markAllShoppingItems,
-    resetShoppingList,
-    getCurrentShoppingItems
+    hideMainButton,
+    handleOpenShopping,
+    handleMarkAll,
+    handleResetList
   ]);
 
   if (!isReady) {
