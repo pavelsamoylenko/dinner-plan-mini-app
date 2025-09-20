@@ -5,13 +5,17 @@ import { DayId } from '@/types';
 import { getCurrentDayOfWeek } from '@/utils/dateUtils';
 
 interface MenuViewProps {
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
   onAutoScroll?: (scrollTop: number) => void;
   shouldAutoScroll?: boolean;
+  resetAutoScroll?: boolean;
 }
 
 const MenuView: React.FC<MenuViewProps> = ({ 
+  scrollContainerRef,
   onAutoScroll, 
-  shouldAutoScroll = true 
+  shouldAutoScroll = true,
+  resetAutoScroll = false
 }) => {
   const { getCurrentWeekMenu } = useAppStore();
   const weekMenu = getCurrentWeekMenu();
@@ -23,44 +27,51 @@ const MenuView: React.FC<MenuViewProps> = ({
 
   // Auto-scroll to today's card with scroll position callback
   const performAutoScroll = useCallback(() => {
-    if (todayRef.current && !hasAutoScrolled && shouldAutoScroll) {
+    if (todayRef.current && !hasAutoScrolled && shouldAutoScroll && scrollContainerRef?.current) {
       const timeout = setTimeout(() => {
-        if (todayRef.current) {
-          // Get the parent scrollable container
-          const scrollableParent = todayRef.current.closest('[data-scroll-container]');
-          if (scrollableParent) {
-            // Calculate the scroll position needed to center the today card
-            const containerRect = scrollableParent.getBoundingClientRect();
-            const cardRect = todayRef.current.getBoundingClientRect();
-            const scrollTop = scrollableParent.scrollTop + cardRect.top - containerRect.top - (containerRect.height / 2) + (cardRect.height / 2);
-            
-            // Smooth scroll to the calculated position
-            scrollableParent.scrollTo({
-              top: Math.max(0, scrollTop),
-              behavior: 'smooth'
-            });
-            
-            // Notify parent about the new scroll position after scroll animation
-            setTimeout(() => {
-              if (onAutoScroll && scrollableParent) {
-                onAutoScroll(scrollableParent.scrollTop);
-              }
-            }, 300); // Wait for smooth scroll to complete
-          }
+        if (todayRef.current && scrollContainerRef?.current) {
+          const scrollableParent = scrollContainerRef.current;
+          
+          // Calculate the scroll position needed to center the today card
+          const containerRect = scrollableParent.getBoundingClientRect();
+          const cardRect = todayRef.current.getBoundingClientRect();
+          const scrollTop = scrollableParent.scrollTop + cardRect.top - containerRect.top - (containerRect.height / 2) + (cardRect.height / 2);
+          
+          // Smooth scroll to the calculated position
+          scrollableParent.scrollTo({
+            top: Math.max(0, scrollTop),
+            behavior: 'smooth'
+          });
+          
+          // Notify parent about the new scroll position after scroll animation
+          setTimeout(() => {
+            if (onAutoScroll && scrollableParent) {
+              const finalScrollTop = scrollableParent.scrollTop;
+              onAutoScroll(finalScrollTop);
+            }
+          }, 300); // Wait for smooth scroll to complete
+          
           setHasAutoScrolled(true);
         }
       }, 100); // Small delay to ensure component is fully rendered
 
       return () => clearTimeout(timeout);
     }
-  }, [hasAutoScrolled, shouldAutoScroll, onAutoScroll]);
+  }, [hasAutoScrolled, shouldAutoScroll, onAutoScroll, scrollContainerRef]);
+
+  // Reset auto-scroll state when needed
+  useEffect(() => {
+    if (resetAutoScroll) {
+      setHasAutoScrolled(false);
+    }
+  }, [resetAutoScroll]);
 
   // Auto-scroll only when needed
   useEffect(() => {
-    if (shouldAutoScroll) {
+    if (shouldAutoScroll && !hasAutoScrolled) {
       performAutoScroll();
     }
-  }, [shouldAutoScroll, performAutoScroll]);
+  }, [shouldAutoScroll, hasAutoScrolled, performAutoScroll]);
 
   return (
     <div className="space-y-4">

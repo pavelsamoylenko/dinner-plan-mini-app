@@ -7,7 +7,8 @@ import ShoppingView from './ShoppingView';
 
 const AppShell: React.FC = () => {
   const { isReady, isTelegram, hapticFeedback } = useTelegram();
-  const mainContentRef = useRef<HTMLElement>(null);
+  const menuScrollRef = useRef<HTMLDivElement>(null);
+  const shoppingScrollRef = useRef<HTMLDivElement>(null);
   const scrollPositions = useRef<Record<string, number>>({ menu: 0, shopping: 0 });
   const hasInitiallyLoaded = useRef<boolean>(false);
   const isFirstMenuLoad = useRef<boolean>(true);
@@ -21,8 +22,9 @@ const AppShell: React.FC = () => {
 
   // Save scroll position when tab changes
   const saveScrollPosition = useCallback((tab: 'menu' | 'shopping') => {
-    if (mainContentRef.current) {
-      scrollPositions.current[tab] = mainContentRef.current.scrollTop;
+    const scrollRef = tab === 'menu' ? menuScrollRef : shoppingScrollRef;
+    if (scrollRef.current) {
+      scrollPositions.current[tab] = scrollRef.current.scrollTop;
     }
   }, []);
 
@@ -30,19 +32,22 @@ const AppShell: React.FC = () => {
   const handleMenuAutoScroll = useCallback((scrollTop: number) => {
     // Update the saved scroll position for menu tab after auto-scroll
     scrollPositions.current.menu = scrollTop;
+    // Mark that first menu load and auto-scroll is complete
+    isFirstMenuLoad.current = false;
   }, []);
 
   // Restore scroll position for current tab
   const restoreScrollPosition = useCallback((tab: 'menu' | 'shopping') => {
-    if (mainContentRef.current) {
+    const scrollRef = tab === 'menu' ? menuScrollRef : shoppingScrollRef;
+    if (scrollRef.current) {
       const savedPosition = scrollPositions.current[tab];
       // Always restore saved position, except for first menu load which will auto-scroll
       const shouldRestore = tab === 'shopping' || (tab === 'menu' && !isFirstMenuLoad.current);
       
       if (shouldRestore) {
         requestAnimationFrame(() => {
-          if (mainContentRef.current) {
-            mainContentRef.current.scrollTop = savedPosition;
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = savedPosition;
           }
         });
       }
@@ -53,11 +58,6 @@ const AppShell: React.FC = () => {
   const handleTabSwitch = useCallback((newTab: 'menu' | 'shopping') => {
     // Save current tab's scroll position
     saveScrollPosition(currentTab);
-    
-    // Mark that we're no longer on first menu load
-    if (currentTab === 'menu') {
-      isFirstMenuLoad.current = false;
-    }
     
     // Switch tab
     hapticFeedback('selection');
@@ -122,29 +122,48 @@ const AppShell: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <main 
-          ref={mainContentRef}
-          data-scroll-container
-          className="container mx-auto px-4 py-6 pb-safe-bottom max-w-2xl overflow-y-auto"
-        >
-          {currentTab === 'menu' ? (
+        <main className="container mx-auto max-w-2xl relative">
+          {/* Menu Tab Content */}
+          <div
+            ref={menuScrollRef}
+            data-scroll-container
+            className={`px-4 py-6 pb-safe-bottom overflow-y-auto ${
+              currentTab === 'menu' ? 'block' : 'hidden'
+            }`}
+            style={{ height: 'calc(100vh - 120px)' }}
+          >
             <MenuView 
+              scrollContainerRef={menuScrollRef}
               onAutoScroll={handleMenuAutoScroll}
               shouldAutoScroll={isFirstMenuLoad.current}
+              resetAutoScroll={currentTab === 'menu' && isFirstMenuLoad.current}
             />
-          ) : (
+          </div>
+
+          {/* Shopping Tab Content */}
+          <div
+            ref={shoppingScrollRef}
+            data-scroll-container
+            className={`px-4 py-6 pb-safe-bottom overflow-y-auto ${
+              currentTab === 'shopping' ? 'block' : 'hidden'
+            }`}
+            style={{ height: 'calc(100vh - 120px)' }}
+          >
             <ShoppingView />
-          )}
+          </div>
         </main>
       </div>
 
-      {/* Debug info for development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-0 left-0 bg-black/80 text-white text-xs p-2 z-50">
-          <div>Telegram: {isTelegram ? 'Yes' : 'No'}</div>
-          <div>Tab: {currentTab}</div>
-        </div>
-      )}
+        {/* Debug info for development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="fixed bottom-0 left-0 bg-black/80 text-white text-xs p-2 z-50">
+            <div>Telegram: {isTelegram ? 'Yes' : 'No'}</div>
+            <div>Tab: {currentTab}</div>
+            <div>First Menu Load: {isFirstMenuLoad.current ? 'Yes' : 'No'}</div>
+            <div>Menu Scroll: {scrollPositions.current.menu}</div>
+            <div>Shopping Scroll: {scrollPositions.current.shopping}</div>
+          </div>
+        )}
     </div>
   );
 };
