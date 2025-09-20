@@ -127,3 +127,12 @@ export function formatDate(date: Date, format: string = 'DD.MM.YYYY'): string {
 export function getCurrentISOString(): string {
   return dayjs().tz(TIMEZONE).toISOString();
 }
+
+/**
+ * Get current day of week (1 = Monday, 7 = Sunday)
+ */
+export function getCurrentDayOfWeek(): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
+  const now = dayjs().tz(TIMEZONE);
+  const isoWeekday = now.isoWeekday(); // dayjs returns 1-7 where 1=Monday
+  return isoWeekday as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+}
