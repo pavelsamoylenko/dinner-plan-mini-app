@@ -32,6 +32,7 @@ export const seedIngredients: ShoppingItem[] = [
   // Овощи
   { id: 'cucumbers', name: 'Огурцы', category: 'vegetables' },
   { id: 'tomatoes', name: 'Помидоры', category: 'vegetables' },
+  { id: 'cherry-tomatoes', name: 'Помидоры черри', category: 'vegetables' },
   { id: 'bell-peppers', name: 'Болгарский перец', category: 'vegetables' },
   { id: 'broccoli', name: 'Брокколи', category: 'vegetables' },
   { id: 'zucchini', name: 'Кабачки', category: 'vegetables' },
@@ -39,10 +40,18 @@ export const seedIngredients: ShoppingItem[] = [
   { id: 'cabbage', name: 'Капуста', category: 'vegetables' },
   { id: 'carrots', name: 'Морковь', category: 'vegetables' },
   { id: 'onions', name: 'Лук', category: 'vegetables' },
+  { id: 'red-onions', name: 'Красный лук', category: 'vegetables' },
   { id: 'mushrooms', name: 'Грибы', category: 'vegetables' },
   { id: 'lettuce', name: 'Салатные листья', category: 'vegetables' },
   { id: 'spinach', name: 'Шпинат', category: 'vegetables' },
   { id: 'greens', name: 'Зелень', category: 'vegetables' },
+  { id: 'cilantro', name: 'Кинза', category: 'vegetables' },
+  { id: 'radish', name: 'Редиска', category: 'vegetables' },
+  { id: 'garlic', name: 'Чеснок', category: 'vegetables' },
+
+  // Фрукты
+  { id: 'avocado', name: 'Авокадо', category: 'fruits' },
+  { id: 'orange', name: 'Апельсин', category: 'fruits' },
 
   // Молочка и яйца
   { id: 'eggs', name: 'Яйца', category: 'dairy_eggs' },
@@ -59,6 +68,7 @@ export const seedIngredients: ShoppingItem[] = [
   { id: 'cream-sauce', name: 'Сливочный соус', category: 'sauces' },
   { id: 'lemon-juice', name: 'Лимонный сок', category: 'sauces' },
   { id: 'mustard', name: 'Горчица', category: 'sauces' },
+  { id: 'vinegar', name: 'Уксус', category: 'sauces' },
 
   // Специи и прочее
   { id: 'paprika', name: 'Паприка', category: 'spices' },
@@ -68,30 +78,32 @@ export const seedIngredients: ShoppingItem[] = [
   { id: 'salt', name: 'Соль', category: 'spices' },
   { id: 'pepper', name: 'Перец', category: 'spices' },
   { id: 'flour', name: 'Мука', category: 'other' },
-  { id: 'breadcrumbs', name: 'Панировочные сухари', category: 'other' }
+  { id: 'breadcrumbs', name: 'Панировочные сухари', category: 'other' },
+  { id: 'walnuts', name: 'Грецкие орехи', category: 'other' },
+  { id: 'pork-neck', name: 'Свинина шея', category: 'meat' }
 ];
 
 // Mapping of dishes to their ingredients
 export const dishToIngredients: Record<string, string[]> = {
   // Week 1
+  'salmon-fillet': ['salmon-fillet', 'lemon-juice'],
+  'mashed-potatoes': ['potatoes', 'milk', 'butter'],
+  'orange-avocado-salad': ['lettuce', 'orange', 'avocado', 'cucumbers', 'cherry-tomatoes', 'olive-oil'],
   'chicken-breast': ['chicken-breast', 'vegetable-oil', 'spices-mix'],
   'buckwheat': ['buckwheat'],
   'cucumber-tomato-salad': ['cucumbers', 'tomatoes', 'vegetable-oil'],
-  'chicken-thighs': ['chicken-thighs', 'spices-mix'],
-  'mashed-potatoes': ['potatoes', 'milk', 'butter'],
-  'cabbage-salad': ['cabbage', 'vegetable-oil'],
-  'chicken-teriyaki': ['chicken-whole', 'teriyaki-sauce'],
-  'rice': ['rice'],
-  'pepper-broccoli': ['bell-peppers', 'broccoli', 'vegetable-oil'],
-  'beef-mince': ['beef-mince', 'onions', 'tomato-sauce'],
+  'chicken-teriyaki-wok': ['chicken-whole', 'eggplant', 'bell-peppers', 'zucchini', 'carrots', 'onions', 'teriyaki-sauce'],
+  'radish-cilantro-salad': ['radish', 'cilantro', 'vinegar', 'garlic'],
+  'bolognese': ['beef-mince', 'tomato-sauce', 'onions', 'carrots'],
   'pasta': ['pasta'],
   'fresh-salad': ['lettuce', 'cucumbers', 'tomatoes', 'vegetable-oil'],
   'beef-steak': ['beef-steak', 'spices-mix', 'vegetable-oil'],
   'bulgur': ['bulgur'],
+  'green-salad-with-avocado': ['lettuce', 'avocado', 'cucumbers', 'zucchini', 'broccoli', 'olive-oil'],
+  'chicken-thighs': ['chicken-thighs', 'spices-mix'],
   'baked-zucchini-peppers': ['zucchini', 'bell-peppers', 'olive-oil'],
-  'salmon-fillet': ['salmon-fillet', 'lemon-juice'],
-  'baked-potatoes': ['potatoes', 'olive-oil'],
-  'pork-pieces': ['pork-pieces', 'onions', 'vegetable-oil'],
+  'odzhakhuri': ['pork-neck', 'potatoes', 'eggplant', 'bell-peppers', 'onions'],
+  'salad-with-nuts': ['cucumbers', 'tomatoes', 'red-onions', 'cilantro', 'walnuts', 'vegetable-oil'],
 
   // Week 2
   'pasta-noodles': ['pasta'],

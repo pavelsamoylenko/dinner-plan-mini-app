@@ -6,39 +6,39 @@ export const seedMenus: WeekMenu[] = [
     title: 'Неделя 1',
     days: {
       1: { // Monday
+        garnish: { id: 'mashed-potatoes', name: 'Картофельное пюре' },
+        protein: { id: 'salmon-fillet', name: 'Филе лосося' },
+        veggies: { id: 'orange-avocado-salad', name: 'Салат с апельсином' }
+      },
+      2: { // Tuesday  
         garnish: { id: 'buckwheat', name: 'Гречка' },
         protein: { id: 'chicken-breast', name: 'Куриная грудка' },
         veggies: { id: 'cucumber-tomato-salad', name: 'Салат огурцы+помидоры' }
       },
-      2: { // Tuesday  
-        garnish: { id: 'mashed-potatoes', name: 'Картофельное пюре' },
-        protein: { id: 'chicken-thighs', name: 'Куриные бёдра' },
-        veggies: { id: 'cabbage-salad', name: 'Салат из капусты' }
-      },
       3: { // Wednesday
-        garnish: { id: 'rice', name: 'Рис' },
-        protein: { id: 'chicken-teriyaki', name: 'Курица терияки' },
-        veggies: { id: 'pepper-broccoli', name: 'Перец+брокколи' }
+        garnish: { id: 'chicken-teriyaki-wok', name: 'Вок с курицей терияки' },
+        protein: { id: 'chicken-teriyaki-wok', name: 'Баклажаны, перец, кабачки, морковь' },
+        veggies: { id: 'radish-cilantro-salad', name: 'Битая редиска' }
       },
       4: { // Thursday
         garnish: { id: 'pasta', name: 'Паста' },
-        protein: { id: 'beef-mince', name: 'Говяжий фарш' },
-        veggies: { id: 'fresh-salad', name: 'Салат свежий' }
+        protein: { id: 'bolognese', name: 'Болоньезе' },
+        veggies: { id: 'fresh-salad', name: 'Салат из свежих овощей' }
       },
       5: { // Friday
         garnish: { id: 'bulgur', name: 'Булгур' },
         protein: { id: 'beef-steak', name: 'Стейк говядины' },
-        veggies: { id: 'baked-zucchini-peppers', name: 'Запеч. кабачки+перцы' }
+        veggies: { id: 'green-salad-with-avocado', name: 'Зеленый салат с авокадо' }
       },
       6: { // Saturday
-        garnish: { id: 'mashed-potatoes', name: 'Пюре' },
-        protein: { id: 'salmon-fillet', name: 'Лосось филе' },
-        veggies: { id: 'cucumbers', name: 'Огурцы' }
+        garnish: { id: 'mashed-potatoes', name: 'Картофельное пюре' },
+        protein: { id: 'chicken-thighs', name: 'Куриные бёдра' },
+        veggies: { id: 'baked-zucchini-peppers', name: 'Запеч. кабачки+перцы' }
       },
       7: { // Sunday
-        garnish: { id: 'baked-potatoes', name: 'Запеч. картофель' },
-        protein: { id: 'pork-pieces', name: 'Свинина кусочками' },
-        veggies: { id: 'cucumber-salad', name: 'Салат огурцы' }
+        garnish: { id: 'odzhakhuri', name: 'Оджахури со свининой' },
+        protein: { id: 'odzhakhuri', name: 'Свинина шея, картофель, баклажан' },
+        veggies: { id: 'salad-with-nuts', name: 'Салат с орехами' }
       }
     }
   },

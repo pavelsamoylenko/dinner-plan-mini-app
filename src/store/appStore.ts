@@ -49,9 +49,9 @@ export const useAppStore = create<AppStore>()(
     (set, get) => ({
       // Initial state
       currentTab: 'menu',
-      selectedWeekIndex: getInitialWeekIndex(38), // Initialize with initial week logic
+      selectedWeekIndex: getInitialWeekIndex(39), // Initialize with initial week logic
       settings: {
-        baseWeek: 38, // Week 38 of 2024 as default starting point
+        baseWeek: 39, // Week 39 of 2024 as default starting point
         showNavigation: true, // Enable navigation for week switching
         enableSync: false,
         language: 'ru',
